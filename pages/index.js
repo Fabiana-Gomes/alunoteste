@@ -4,13 +4,15 @@ import { io } from 'socket.io-client';
 const Home = () => {
     const [isSharing, setIsSharing] = useState(false); // Estado para controlar o status do compartilhamento
     const [errorMessage, setErrorMessage] = useState(null); // Estado para exibir mensagens de erro
+    const [socket, setSocket] = useState(null); // Estado para armazenar o socket
 
     useEffect(() => {
-        const socket = io('http://localhost:3000'); // Endereço do servidor do instrutor
+        const newSocket = io('http://192.168.1.46:3000'); // Endereço do servidor do instrutor
+        setSocket(newSocket);
 
         // Limpar ao desmontar o componente
         return () => {
-            socket.disconnect();
+            newSocket.disconnect();
         };
     }, []);
 
@@ -25,7 +27,6 @@ const Home = () => {
             videoElement.srcObject = stream;
 
             // Enviar a stream para o servidor do instrutor
-            const socket = io('http://localhost:3000');
             socket.emit('stream', stream);
             setIsSharing(true); // Atualiza o status para "compartilhando"
         } catch (error) {
@@ -45,6 +46,14 @@ const Home = () => {
         setIsSharing(false);
     };
 
+    // Função para enviar uma mensagem de teste para o instrutor
+    const sendMessage = () => {
+        if (socket) {
+            socket.emit('testMessage', 'mensagem de teste para conexão');
+            console.log('Mensagem de teste enviada para o instrutor');
+        }
+    };
+
     return (
         <div style={styles.container}>
             <h1 style={styles.title}>Compartilhamento Aluno</h1>
@@ -61,6 +70,9 @@ const Home = () => {
                         Parar Compartilhamento de Tela
                     </button>
                 )}
+                <button style={styles.button} onClick={sendMessage}>
+                    Enviar Mensagem de Teste
+                </button>
             </div>
 
             <div style={styles.videoContainer}>
@@ -117,9 +129,6 @@ const styles = {
         cursor: 'pointer',
         transition: 'background-color 0.3s, transform 0.2s',
         marginBottom: '20px', // Espaço entre o botão e o vídeo
-    },
-    buttonHover: {
-        backgroundColor: '#45a049', // Cor mais escura ao hover
     },
     error: {
         color: 'red',
